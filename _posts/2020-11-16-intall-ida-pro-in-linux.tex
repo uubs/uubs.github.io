@@ -1,0 +1,75 @@
+\documentclass{article}
+
+\usepackage[UTF8]{ctex}
+\usepackage{listings}
+
+\title{如何在linux上安装IDA-Pro}
+
+\begin{document}
+\maketitle
+
+\textcolor{gray}{注: 本文的linux系统采用的是\textit{18.04.1-Ubuntu}, IDA-Pro安装的版本是IDA-Pro-6.5}
+
+
+\section{安装方案}
+利用wine工具打开windows下的IDA-Pro。\\
+
+\textbf{安装wine} \\
+使用下面的命令进行\textit{wine}的安装。
+
+\begin{lstlisting}
+\~\$ sudo apt-get install wine
+\end{lstlisting}
+
+\textbf{复制windows下的\textit{IDA 6.5}所以文件到linux的\textit{/opt/ida65} 下}
+
+\textbf{编写IDA启动脚本}
+本步骤是为了之后的方便使用，将脚本保存在本用户的\textit{home}目录下。
+
+编写启动脚本\textit{~/ida64}
+\begin{lstlisting}
+#!/bin/bash
+wine /opt/ida65/idaq64.exe
+
+\end{lstlisting}
+
+编写启动\textit{~/ida32}
+\begin{lstlisting}
+#!/bin/bash
+wine /opt/ida65/idaq32.exe
+\end{lstlisting}
+
+\textbf{给所有用户添加启动脚本执行权限}//
+\begin{lstlisting}
+\~\$ sudo chmod 777 ida64 
+\~\$ sudo chmod 777 ida32 
+\end{lstlisting}
+
+\textbf{执行ida启动脚本}\\
+\begin{lstlisting}
+\~\$ \~/ida64
+\~\$ \~/ida32
+\end{lstlisting}
+
+\section{遇到的问题}
+
+\subsection{import\_dll Library python27.dll not found
+}
+
+\textbf{具体错误信息} \\
+\begin{lstlisting}
+0009:err:module:import\_dll Library python27.dll 
+(which is needed by L"Z:\\opt\\ida65\\plugins\\python.p64") not found
+
+\end{lstlisting}
+
+\textbf{解决方案} \\
+通过\textit{wine}安装\textit{windows}的\textit{python}
+\begin{lstlisting}
+\~\$ curl -O https://www.python.org/ftp/python/2.7.15/python-2.7.15.msi
+\~\$ wine msiexec /i python-2.7.15.msi 
+
+\end{lstlisting}
+
+
+\end{document}

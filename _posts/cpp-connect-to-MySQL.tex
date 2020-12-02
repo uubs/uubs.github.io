@@ -1,0 +1,55 @@
+\documentclass{article}
+
+\usepackage[UTF8]{ctex}
+
+\begin{document}
+\textbf{安裝平臺} ubuntu18:04
+
+在電腦上能夠通過命令$mysql -u username -p #input password next$使用\textit{MySQL}服務器。
+
+下面配置\textit{cpp}的連接環境，
+\begin{lstlisting}
+\$ sudo apt-get install libmysqlclient-dev
+\end{lstlisting}
+
+測試能夠連接\textit{MySQL}服務器
+\begin{lstlisting}
+#include <iostream>
+#include <mysql.h>
+
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+	MYSQL conn;
+	mysql_init(&conn);
+
+/*  MYSQL *     STDCALL mysql_real_connect(MYSQL *mysql, const char *host,         
+                        const char *user,
+                        const char *passwd,
+                        const char *db,
+                        unsigned int port,
+                        const char *unix_socket,
+                        unsigned long clientflag);
+*/
+	if (!mysql_real_connect(&conn, "localhost", "root", "", "example", 3306, NULL, 0))
+	{
+		cout << "mysql connect failed" << endl;
+		exit(-1);
+	}
+	cout << "mysql conenct success" << endl;
+	mysql_close(&conn);
+	return 0;
+}
+\end{lstlisting}
+
+編譯命令
+\begin{lstlisting}
+g++ name.cpp -I /usr/include/mysql -lmysqlclient
+\end{lstlisting}
+
+輸出連接成功表示能夠正常連接數據庫
+
+NEXT: manipulate MySQL database through cpp MySQL connector
+
+\end{document}

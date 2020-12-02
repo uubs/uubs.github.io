@@ -1,0 +1,267 @@
+\documentclass[a4]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\usepackage{geometry}
+\geometry{a4paper, scale=0.8}
+
+\lstset{
+    columns=fixed,       
+    %numbers=left,                                        % 在左侧显示行号
+    frame=none, %tb,                                     % 不显示背景边框
+    backgroundcolor=\color[RGB]{244,244,244},            % 设定背景颜色：浅晦涩，近透明
+    keywordstyle=\color[RGB]{40,40,255},                 % 设定关键字颜色
+    numberstyle=\footnotesize\color{darkgray},           % 设定行号格式
+    commentstyle=\it\color[RGB]{0,96,96},                % 设置代码注释的格式
+    stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},   % 设置字符串格式
+    showstringspaces=false,                              % 不显示字符串中的空格
+    language=C++,                                        % 设置语言C, C++, bash, Fortran, Python, TeX, make
+    basicstyle=\small, %\scriptsize%\tiny%\footnotesize  % basic fontsize in it
+    breaklines=true
+}
+
+\begin{document}
+
+\section{前言}
+首先，我们的机器上已经有安装了docker。通过 \lstinline[language=C++]{docker pull ubuntu:16.04}命令拉下版本为\textit{16.04}的ubuntu操作系统。关于将docker官方镜像源更改为阿里云镜像源，请参考这篇文章\footnote{我是footnote}。
+
+\textbf{LAMP},表示\lstinline[language=C++]{Linux+Apache+MySql/MariaDB+Perl/PHP/Python},是一种搭建服务器的解决方案。在本文中讨论的是ubuntu:16.04+Apache2+Mysql5.7+PHP7
+
+\section{安装LAMP}
+我们通过\lstinline[language=C++]{docker pull}拉取了ubuntu:16.04镜像到本地，查看本地镜像如下，
+\begin{lstlisting}[language=C++]
+uubs@uubs:~\$ docker images
+REPOSITORY TAG      IMAGE ID      CREATED             SIZE
+ubuntu   16.04      4b22027ede29    6 weeks ago       127MB
+\end{lstlisting}
+
+通过docker镜像创建docker容器，
+\begin{lstlisting}[language=C++]
+uubs@uubs:~\$ docker run -it ubuntu:16.04 /bin/bash 
+root@5d4fe8bb2fea:/#  <- 进入容器内部
+\end{lstlisting}
+
+好的，我们现在进入了我们创建的容器中，要做的\textbf{第一件事}是， 注\footnote{如果此处不运行此条命令来更新源,那么无法下载包}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/#  apt-get update
+\end{lstlisting}
+
+\subsection{安装MYSQL}
+运行一下命令进行安装，
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# apt-get install -y mysql-server mysql-client libmysqlclient-dev
+\end{lstlisting}
+
+安装net-tools查看MySql的运行状态，
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# apt-get install -y net-tools
+\end{lstlisting}
+
+下面我们来启动MySql服务器，关于mysql服务器的其他操作，见\ref{q:mysql-control}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# /etc/init.d/mysql start
+\end{lstlisting}
+
+查看MySql服务器是否启动，
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# netstat -tl | grep mysql
+tcp        0      0 localhost:mysql         *:*          LISTEN     
+\end{lstlisting}
+
+\subsection{安装apache2}
+运行一下命令进行安装，
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# apt-get install apache2
+\end{lstlisting}
+
+下面我们来启动apache服务器，关于apache服务器的其他操作，见\ref{q:apache-control}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# /etc/init.d/apache2 start
+ * Starting Apache httpd web server apache2                                      * 
+\end{lstlisting}
+
+查看apache2服务器是否启动，
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# ps -e | grep apache
+   42 ?        00:00:00 apache2
+   45 ?        00:00:03 apache2
+   46 ?        00:00:03 apache2
+\end{lstlisting}
+
+\subsection{安装PHP7.0}
+安装过程如下，
+\begin{lstlisting}[language=C++]
+1. 安装 software-properties-common
+root@5d4fe8bb2fea:/# apt-get install -y software-properties-common 
+
+2. 添加php仓库
+root@5d4fe8bb2fea:/# add-apt-repository ppa:ondrej/php; apt-get update
+
+3. 清除之前安装的php版本
+root@5d4fe8bb2fea:/# a2enmod phpx.x
+
+4. 安装PHP7.2
+root@5d4fe8bb2fea:/# apt-get install -y --allow-unauthenticated php7.2
+
+5. 安装常用扩展
+root@5d4fe8bb2fea:/# apt-get install -y --allow-unauthenticated php7.2-fpm php7.2-mysql php7.2-curl php7.2-json php7.2-mbstring php7.2-xml  php7.2-intl php7.2-odbc php7.2-cgi
+
+\end{lstlisting}
+
+到第4步输出,
+\begin{lstlisting}
+NOTICE: Not enabling PHP 7.2 FPM by default.
+NOTICE: To enable PHP 7.2 FPM in Apache2 do:
+NOTICE: a2enmod proxy\_fcgi setenvif
+NOTICE: a2enconf php7.2-fpm
+NOTICE: You are seeing this message because you have apache2 package installed.
+\end{lstlisting}
+
+到此，我们把该安装的东西都安装好了。
+
+\section{制作容器镜像}
+
+现在，可以通过\lstinline{exit}退出docker。
+
+查看我们刚才关闭的容器，
+\begin{lstlisting}
+uubs@uubs:~\$ docker ps -l
+CONTAINER ID  IMAGE        COMMAND      CREATED       STATUS      PORTS     NAMES
+5d4fe8bb2fea  ubuntu:16.04 "/bin/bash"  27 hours ago  Exited (0) 19 seconds ago affectionate_goldstine
+\end{lstlisting}
+
+将该容器保存为镜像，
+\begin{lstlisting}
+uubs@uubs:~\$ docker commit 5d4fe8bb2fea lamp:1.0
+\end{lstlisting}
+
+查看镜像，
+\begin{lstlisting}
+uubs@uubs:~\$ docker images
+REPOSITORY             TAG                 IMAGE ID            CREATED             SIZE
+lamp                   1.0                 8aecf087ea32        38 seconds ago      733MB
+\end{lstlisting}
+
+镜像制作成功。
+
+\section{使用lamp:1.0镜像}
+
+创建lamp:1.0镜像的容器，
+\begin{lstlisting}
+uubs@uubs:~\$ docker run -it lamp:1.0 /bin/bash
+\end{lstlisting}
+
+查看容器的地址，
+\begin{lstlisting}
+root@1eccf20d5c77:/# ifconfig
+inet addr:172.17.0.2  Bcast:172.17.255.255  Mask:255.255.0.0 <- 判断出地址
+\end{lstlisting}
+
+在宿主机上利用nmap工具扫描172.17.0.2地址的端口开放情况，此处有错误\footnote{如果按照这种方法来扫描下面开启了端口的容器，依然得到端口关闭的结果,待熟悉nmap后再改正}
+\begin{lstlisting}
+uubs@uubs:~\$ nmap 172.17.0.2
+All 1000 scanned ports on 172.17.0.2 are closed
+\end{lstlisting}
+
+得知该地址所有的端口都关闭了。\\
+下面考虑在容器中打开端口。
+
+借助IPtables\footnote{通过apt-get install iptables安装}工具打开容器的端口，注意这里使用IPtables需要在创建容器时使用\textit{--privileged}参数，否则将会出现下面的错误，
+\begin{lstlisting}
+iptables v1.6.0: can't initialize iptables table `filter': Permission denied (you must be root)
+\end{lstlisting}
+
+下面使用正确的方式创建容器并进入，
+\begin{lstlisting}
+uubs@uubs:~\$ docker run -it --priviliged lamp:1.0 /bin/bash
+\end{lstlisting}
+
+打开容器端口,此处有个问题\footnote{对于下一步的启动apache2，本步究竟有没有起作用?需要熟悉IPtables工具的使用}
+\begin{lstlisting}
+root@8d6a581df360:/# /sbin/iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+\end{lstlisting}
+
+保存规则，
+\begin{lstlisting}
+root@8d6a581df360:/# iptables-save
+\end{lstlisting}
+
+现在我们便开启了80端口。按照之前提到的方法打开apache服务，通过以下语句验证apache服务是否正常工作，
+\begin{lstlisting}
+telnet 172.17.0.2 80
+Trying 172.17.0.2...
+Connected to 172.17.0.2.
+Escape character is '^]'.
+\end{lstlisting}
+
+显示连接上了apache服务，这是如果我们在浏览其中输入\lstinline{http://172.17.0.2:80/}将会得到apache2的字样。
+
+至此，LAMP镜像搭建完毕。
+
+\section{问题及方案}
+\subsection{MYSQL 服务器的操作} 
+
+\label{q:mysql-control}
+\emph{启动服务器}
+\begin{itemize}
+    \item 使用service启动：\lstinline{service mysql start}
+    \item 使用mysqld脚本启动：\lstinline{/etc/init.d/mysql start}
+    \item 其他
+\end{itemize}
+\emph{停止服务器}
+\begin{itemize}
+    \item 使用service启动：\lstinline{service mysql stop}
+    \item 使用mysqld脚本启动：\lstinline{/etc/init.d/mysql stop}
+    \item 其他
+\end{itemize}
+\emph{重启服务器}
+\begin{itemize}
+    \item 使用service启动：\lstinline{service mysql restart}
+    \item 使用mysqld脚本启动：\lstinline{/etc/init.d/mysql restart}
+    \item 其他
+\end{itemize}
+\emph{查看服务器是否正在运行}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# netstat -tl | grep mysql
+tcp        0      0 localhost:mysql         *:*          LISTEN     
+\end{lstlisting}
+\emph{登录数据库}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# mysql -u root -p 
+<- 输入之前设置的root用户密码，如果没有设置，则默认为空
+\end{lstlisting}
+
+\subsection{apache2 服务器的操作} 
+
+\label{q:apache-control}
+\emph{启动服务器}
+\begin{itemize}
+    \item \lstinline{/etc/init.d/apache2 start}
+    \item 其他
+\end{itemize}
+\emph{停止服务器}
+\begin{itemize}
+    \item \lstinline{/etc/init.d/apache2 stop}
+    \item 其他
+\end{itemize}
+\emph{重启服务器}
+\begin{itemize}
+    \item \lstinline{/etc/init.d/apache2 restart}
+    \item 其他
+\end{itemize}
+\emph{查看服务器是否正在运行}
+\begin{lstlisting}[language=C++]
+root@5d4fe8bb2fea:/# ps -e | grep apache
+   42 ?        00:00:00 apache2
+   45 ?        00:00:03 apache2
+   46 ?        00:00:03 apache2
+\end{lstlisting}
+
+\section{下一步}
+\begin{itemize}
+    \item 使用源码编译安装mysql, apache。
+    \item 写出搭建过程的dockerfile
+\end{itemize}
+
+\end{document}

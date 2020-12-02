@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage[UTF8]{ctex}
+
+\begin{document}
+
+\title{内存分布}
+\maketitle
+
+内存分布\footnote{此处正确的表述应该是x86系列的内存分布} 是一个不断发展的名词，从实模式(real mode)，到保护模式(protect mode)，再到IA-32e模式(long mode)，内存的分布具有不同的机制。以下将从实模式开始，讲述在各个模式下的内存分布。
+
+实模式是伴随着16位x86CPU出现的，保护模式伴随着32位x86CPU出现的，IA-32e模式是伴随64位x86CPU出现的。但并不是说，实模式只在16位上，而不会在32位或64位上出现。各种不同的模式的本质区别是对内存的寻址方式的不同。\footnote{此处可能想法还有写问题，还需要斟酌斟酌}
+\section{实模式(real mode)}
+
+\subsection{为什么叫做实模式(real mode)}
+ 这是因为实模式中使用的地址就是物理内存的地址，也就是说，我们知道某个程序的地址是0x4300，他的物理地址就是0x4300。
+
+\subsection{实模式(real mode)中的内存分布}
+在实模式中，地址是由段地址：偏移地址组成的。例如对于16位寄存器，默认数据段$DS:DX$,代码段$CS:IP$,以及其他的段地址寄存器$SS, ES, FS, GS$和通用寄存器构成的段，这里对这部分不详细论述。 \\
+实模式下，指令可以是利用16位寄存器操作，也可以使用32位寄存器操作。 \footnote{此处的说法可能有问题}
+
+
+
+\section{保护模式(protect mode)}
+
+\section{IA-32e模式(long mode)}
+
+\emph{reference}
+\begin{enumerate}
+  \item{https://en.wikipedia.org/wiki/Real_mode}
+\end{enumerate}
+\end{document}
